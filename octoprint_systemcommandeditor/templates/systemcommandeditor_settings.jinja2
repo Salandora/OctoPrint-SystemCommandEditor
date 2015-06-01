@@ -1,0 +1,20 @@
+<h4>System Commands Editor</h4>
+
+<div class="dropdown open">
+    <ul class="dropdown-menu" id="systemActions" data-url="{{ url_for("plugin.systemcommandeditor.systemCommands") }}">
+        <li style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#systemContextMenu1', menuSelected: $root.systemContextMenu }"></li>
+        <!-- ko foreach: systemActions -->
+        <li data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#systemContextMenu2', menuSelected: $root.systemContextMenu }"><a href="#" data-bind="text: name"></a></li>
+        <!-- /ko -->
+    </ul>
+</div>
+
+<ul id="systemContextMenu1" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+	<li>
+		<a href="#" cmd="createCommand">{{ _('Create Command') }}</a>
+	</li>
+</ul>
+<ul id="systemContextMenu2" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+	<li><a href="#" cmd="editCommand">{{ _('Edit') }}</a></li>
+	<li><a href="#" cmd="deleteCommand">{{ _('Delete') }}</a></li>
+</ul>
