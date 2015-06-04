@@ -38,6 +38,44 @@
                 array.push(element);
             })
             self.systemActions(array);
+
+            $("#systemActions").sortable({
+                items: '> li:not(.static)',
+                cursor: 'move',
+                axis: 'y',
+                update: function(event, ui) {
+                    var data = ko.dataFor(ui.item[0]);
+                    var item = _.find(self.actionsFromServer, function(e) {
+                        return e.action == data.action();
+                    });
+
+                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                    if (position >= 0) {
+                        self.actionsFromServer = _.without(self.actionsFromServer, item);
+                        self.actionsFromServer.splice(position, 0, item);
+                    }
+                    ui.item.remove();
+                    self.rerenderActions();
+                },
+                start: function(){
+                    $('.static', this).each(function(){
+                        var $this = $(this);
+                        $this.data('pos', $this.index());
+                    });
+                },
+                change: function(){
+                    $sortable = $(this);
+                    $statics = $('.static', this).detach();
+                    $helper = $('<li></li>').prependTo(this);
+                    $statics.each(function(){
+                        var $this = $(this);
+                        var target = $this.data('pos');
+
+                        $this.insertAfter($('li', $sortable).eq(target));
+                    });
+                    $helper.remove();
+                }
+            });
         }
 
         self._showPopup = function (options, eventListeners) {

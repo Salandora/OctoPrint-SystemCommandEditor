@@ -1,15 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-### (Don't forget to remove me)
-# This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
-# as well as the plugin mixins it's subclassing from. This is really just a basic skeleton to get you started,
-# defining your plugin as a template plugin.
-#
-# Take a look at the documentation on what other plugin mixins are available.
-
-from flask import jsonify
-from octoprint.settings import settings
+__author__ = "Marc Hannappel <salandora@gmail.com>"
+__license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agpl.html'
 
 import octoprint.plugin
 
@@ -35,15 +28,10 @@ class SystemCommandEditorPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_assets(self):
 		return dict(
-			js=["js/systemcommandeditor.js",
+			js=["js/jquery.ui.sortable.js",
+				"js/systemcommandeditor.js",
 				"js/systemcommandeditorDialog.js"]
 		)
-	
-	@octoprint.plugin.BlueprintPlugin.route("/systemCommands", methods=["GET"])
-	def systemCommands(self):
-		s = settings()
-		return jsonify(actions=s.get(["system", "actions"]))
-	
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
@@ -54,5 +42,5 @@ def __plugin_load__():
 	global __plugin_implementation__
 	__plugin_implementation__ = SystemCommandEditorPlugin()
 
-	# global __plugin_hooks__
-	# __plugin_hooks__ = {"some.octoprint.hook": __plugin_implementation__.some_hook_handler}
+	global __plugin_license__
+	__plugin_license__ = "AGPLv3"

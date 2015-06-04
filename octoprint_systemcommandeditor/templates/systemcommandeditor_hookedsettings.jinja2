@@ -1,8 +1,8 @@
 <h4>System Command Editor</h4>
 
 <div class="dropdown open">
-    <ul class="dropdown-menu" id="systemActions" data-url="{{ url_for("plugin.systemcommandeditor.systemCommands") }}">
-        <li style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#systemContextMenu1', menuSelected: $root.systemContextMenu }"></li>
+    <ul class="dropdown-menu" id="systemActions">
+        <li class="static" style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#systemContextMenu1', menuSelected: $root.systemContextMenu }"></li>
         <!-- ko foreach: systemActions -->
         <li data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#systemContextMenu2', menuSelected: $root.systemContextMenu }"><a href="#" data-bind="text: name"></a></li>
         <!-- /ko -->
