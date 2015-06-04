@@ -16,14 +16,6 @@
 
         self.requestData = function () {
             self.settingsViewModel.requestData(self._fromResponse());
-            /*$.ajax({
-                url: $("#systemActions").data("url"),
-                method: "GET",
-                dataType: "json",
-                success: function (response) {
-                    self._fromResponse(response);
-                }
-            });*/
         };
 
         self._fromResponse = function () {
@@ -158,6 +150,6 @@
     OCTOPRINT_VIEWMODELS.push([
         SystemCommandEditorViewModel,
         ["settingsViewModel", "systemCommandEditorDialogViewModel"],
-        "#settings_plugin_systemcommandeditor"
+        ["#settings_plugin_systemcommandeditor"]
     ]);
 });

@@ -21,7 +21,14 @@ class SystemCommandEditorPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(actions=[])
 
 	def get_template_configs(self):
-		return [dict(type="settings", custom_bindings=True)]
+		if "editorcollection" in self._plugin_manager.enabled_plugins:
+			return [
+				dict(type="plugin_editorcollection_EditorCollection", template="systemcommandeditor_hookedsettings.jinja2", custom_bindings=True)
+			]
+		else:
+			return [
+				dict(type="settings", template="systemcommandeditor_hookedsettings.jinja2", custom_bindings=True)
+			]
 
 	def on_settings_save(self, data):
 		pass
