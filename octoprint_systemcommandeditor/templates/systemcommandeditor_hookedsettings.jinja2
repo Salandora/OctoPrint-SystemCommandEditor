@@ -2,26 +2,26 @@
 
 <div class="dropdown open">
     <ul class="dropdown-menu" id="systemActions">
-        <li class="static" style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#systemContextMenu1', menuSelected: $root.systemContextMenu }"></li>
+        <li class="static" style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#SystemCommandEditor_systemContextMenu1', menuSelected: $root.systemContextMenu }"></li>
         <!-- ko foreach: systemActions -->
             <!-- ko ifnot: action().startsWith("divider") -->
-            <li data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.systemContextMenu }"><a href="#" data-bind="text: name"></a></li>
+            <li data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#SystemCommandEditor_commandContextMenu', menuSelected: $root.systemContextMenu }"><a href="#" data-bind="text: name"></a></li>
             <!-- /ko -->
             <!-- ko if: action().startsWith("divider") -->
-            <li style="height: 10px; overflow: hidden; background-color: #e5e5e5; border: 1px solid #fff" data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#dividerContextMenu', menuSelected: $root.systemContextMenu }"></li>
+            <li style="height: 10px; overflow: hidden; background-color: #e5e5e5; border: 1px solid #fff" data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#SystemCommandEditor_dividerContextMenu', menuSelected: $root.systemContextMenu }"></li>
             <!-- /ko -->
         <!-- /ko -->
     </ul>
 </div>
 
-<ul id="systemContextMenu1" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+<ul id="SystemCommandEditor_systemContextMenu1" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
 	<li><a href="#" cmd="createCommand">{{ _('Create Command') }}</a></li>
     <li><a href="#" cmd="createDivider">{{ _('Create Divider') }}</a></li>
 </ul>
-<ul id="commandContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+<ul id="SystemCommandEditor_commandContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
 	<li><a href="#" cmd="editCommand">{{ _('Edit') }}</a></li>
 	<li><a href="#" cmd="deleteCommand">{{ _('Delete') }}</a></li>
 </ul>
-<ul id="dividerContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+<ul id="SystemCommandEditor_dividerContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
 	<li><a href="#" cmd="deleteCommand">{{ _('Delete') }}</a></li>
 </ul>
