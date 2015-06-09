@@ -10,46 +10,37 @@
 
         self.popup = undefined;
 
+        self.dividerID = 0;
+
         self.onSettingsShown = function () {
             self.requestData();
         };
 
         self.requestData = function () {
-            self.settingsViewModel.requestData(self._fromResponse());
+            $.ajax({
+                url: API_BASEURL + "settings",
+                type: "GET",
+                dataType: "json",
+                success: function(response) {
+                    self.fromResponse(response);
+                }
+            });
         };
 
-        self._fromResponse = function () {
-            self.actionsFromServer = self.settingsViewModel.system_actions() || [];
+        self.fromResponse = function (response) {
+            self.actionsFromServer = response.system.actions || [];
             self.rerenderActions();
-        };
-
-        self.rerenderActions = function() {
-            var array = []
-            _.each(self.actionsFromServer, function(e) {
-                var element = {
-                    name: ko.observable(e.name),
-                    action: ko.observable(e.action),
-                    command: ko.observable(e.command)
-                };
-
-                if (e.hasOwnProperty("confirm"))
-                    element.confirm = ko.observable(e.confirm);
-
-                array.push(element);
-            })
-            self.systemActions(array);
 
             $("#systemActions").sortable({
                 items: '> li:not(.static)',
                 cursor: 'move',
-                axis: 'y',
                 update: function(event, ui) {
                     var data = ko.dataFor(ui.item[0]);
                     var item = _.find(self.actionsFromServer, function(e) {
                         return e.action == data.action();
                     });
 
-                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]) - 1;
                     if (position >= 0) {
                         self.actionsFromServer = _.without(self.actionsFromServer, item);
                         self.actionsFromServer.splice(position, 0, item);
@@ -76,6 +67,33 @@
                     $helper.remove();
                 }
             });
+        };
+
+        self.rerenderActions = function() {
+            self.dividerID = 0;
+
+            var array = []
+            _.each(self.actionsFromServer, function(e) {
+                var element = {};
+
+                if (!e.action.startsWith("divider")) {
+                    element = _.extend(element, {
+                        name: ko.observable(e.name),
+                        action: ko.observable(e.action),
+                        command: ko.observable(e.command)
+                    });
+
+                    if (e.hasOwnProperty("confirm"))
+                        element.confirm = ko.observable(e.confirm);
+                }
+                else
+                {
+                    e.action = "divider" + (++self.dividerID);
+                    element.action = ko.observable(e.action);
+                }
+                array.push(element);
+            })
+            self.systemActions(array);
         }
 
         self._showPopup = function (options, eventListeners) {
@@ -153,8 +171,7 @@
             });
         }
 
-        self.systemContextMenu = function (invokedOn, contextParent, selectedMenu)
-        {
+        self.systemContextMenu = function (invokedOn, contextParent, selectedMenu) {
             switch (selectedMenu.attr('cmd')) {
                 case "editCommand": {
                     self.editElement(invokedOn, contextParent, selectedMenu);
@@ -168,6 +185,11 @@
                     self.createElement(invokedOn, contextParent, selectedMenu);
                     break;
                 }
+                case "createDivider": {
+                    self.actionsFromServer.push({ action: "divider" });
+                    self.rerenderActions();
+                    break;
+                }
             }
         }
 
@@ -176,6 +198,11 @@
         }
 
         self.onSettingsBeforeSave = function () {
+            _.each(self.actionsFromServer, function(e) {
+                if (e.action.startsWith("divider")) {
+                    e.action = "divider";
+                }
+            });
             self.settingsViewModel.system_actions(self.actionsFromServer);
         }
 
