@@ -33,6 +33,23 @@ class SystemCommandEditorPlugin(octoprint.plugin.SettingsPlugin,
 				"js/systemcommandeditorDialog.js"]
 		)
 
+	def get_update_information(self):
+		return dict(
+			systemcommandeditor=dict(
+				displayName="System Command Editor Plugin",
+				displayVersion=self._plugin_version,
+
+				# version check: github repository
+				type="github_release",
+				user="Salanddora",
+				repo="OctoPrint-SystemCommandEditor",
+				current=self._plugin_version,
+
+				# update method: pip
+				pip="https://github.com/Salandora/OctoPrint-SystemCommandEditor/archive/{target_version}.zip"
+			)
+		)
+
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
@@ -41,6 +58,11 @@ __plugin_name__ = "System Command Editor"
 def __plugin_load__():
 	global __plugin_implementation__
 	__plugin_implementation__ = SystemCommandEditorPlugin()
+
+	global __plugin_hooks__
+	__plugin_hooks__ = {
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+	}
 
 	global __plugin_license__
 	__plugin_license__ = "AGPLv3"
