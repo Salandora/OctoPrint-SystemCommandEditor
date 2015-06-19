@@ -41,7 +41,7 @@ class SystemCommandEditorPlugin(octoprint.plugin.SettingsPlugin,
 
 				# version check: github repository
 				type="github_release",
-				user="Salanddora",
+				user="Salandora",
 				repo="OctoPrint-SystemCommandEditor",
 				current=self._plugin_version,
 
