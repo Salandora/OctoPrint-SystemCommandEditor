@@ -1,25 +1,25 @@
 <div id="systemCommandEditorDialog" class="modal hide">
-    <div class="modal-header">
-        <h3 data-bind="text: title"></h3>
-    </div>
-    <div class="modal-body">
-        <form class="form-horizontal" data-bind="with: element">
+    <form id="systemCommandEditorDialogForm" class="form-horizontal" data-bind="with: element">
+        <div class="modal-header">
+            <h3 data-bind="text: $root.title"></h3>
+        </div>
+        <div class="modal-body">
             <div class="control-group">
-                <label class="control-label">{{ _('Name') }}</label>
+                <label class="control-label" for=name">{{ _('Name') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: name"></input>
+                    <input type="text" id="systemCommandEditorDialog_Name" class="required" style="width: 97%" data-bind="value: name"></input>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label">{{ _('Action') }}</label>
+                <label class="control-label" for="action">{{ _('Action') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: action"></input>
+                    <input type="text" id="systemCommandEditorDialog_Action" class="required" style="width: 97%" data-bind="value: action"></input>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label">{{ _('command') }}</label>
+                <label class="control-label" for="command">{{ _('Command') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: command"></input>
+                    <input type="text" id="systemCommandEditorDialog_Command" style="width: 97%" data-bind="value: command"></input>
                 </div>
             </div>
 
@@ -34,10 +34,10 @@
                 </div>
             </div>
             <!-- /ko -->
-        </form>
-    </div>
-    <div class="modal-footer">
-        <a href="#" class="btn" data-dismiss="modal">{{ _('Cancel') }}</a>
-        <a href="#" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">{{ _('Confirm') }}</a>
-    </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn" data-dismiss="modal">{{ _('Cancel') }}</button>
+            <button type="submit" class="btn btn-primary">{{ _('Confirm') }}</button>
+        </div>
+    </form>
 </div>
