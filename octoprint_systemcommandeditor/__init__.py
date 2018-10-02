@@ -30,7 +30,8 @@ class SystemCommandEditorPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=["js/jquery.ui.sortable.js",
 				"js/systemcommandeditor.js",
-				"js/systemcommandeditorDialog.js"]
+				"js/systemcommandeditorDialog.js"],
+			css=["css/systemcommandeditor.css"]
 		)
 
 	def get_update_information(self):
