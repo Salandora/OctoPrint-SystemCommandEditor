@@ -1,7 +1,8 @@
 <h4>System Command Editor</h4>
 
+<p><small>Right-mouse click the section below for available options.</small></p>
 <div class="dropdown open">
-    <ul class="dropdown-menu" id="systemActions">
+    <ul class="dropdown-menu" id="systemActions" title="Right-mouse click for actions">
         <li class="static" style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#SystemCommandEditor_systemContextMenu1', menuSelected: $root.systemContextMenu }"></li>
         <!-- ko foreach: systemActions -->
             <!-- ko ifnot: action().startsWith("divider") -->

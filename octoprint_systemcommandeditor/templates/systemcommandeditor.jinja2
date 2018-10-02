@@ -7,30 +7,30 @@
             <div class="control-group">
                 <label class="control-label">{{ _('Name') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: name"></input>
+                    <input style="width: 97%" data-bind="value: name" placeholder="Example: Shutdown"></input>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('Action') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: action"></input>
+                    <input style="width: 97%" data-bind="value: action" placeholder="Example: shutdown"></input>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('command') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: command"></input>
+                    <input style="width: 97%" data-bind="value: command" placeholder="Example: sudo shutdown -h now"></input>
                 </div>
             </div>
 
             <div class="control-group">
-                <label class="control-label"><input type="checkbox" data-bind="checked: $root.useConfirm"></input>{{ _('Use Confirmation') }}</label>
+                <label class="control-label"><input type="checkbox" data-bind="checked: $root.useConfirm"></input>&nbsp;{{ _('Use Confirmation') }}</label>
             </div>
             <!-- ko if: $root.useConfirm() -->
             <div class="control-group">
                 <label class="control-label">{{ _('Message') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: confirm"></input>
+                    <input style="width: 97%" data-bind="value: confirm" placeholder="Example: You are about to take the following action."></input>
                 </div>
             </div>
             <!-- /ko -->
