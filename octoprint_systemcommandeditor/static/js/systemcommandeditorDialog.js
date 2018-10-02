@@ -23,12 +23,35 @@ $(function () {
             }
 
             self.element(ko.mapping.fromJS(element));
-        }
+        };
+
         self.show = function (f) {
             var dialog = $("#systemCommandEditorDialog");
-            var primarybtn = $('div.modal-footer .btn-primary', dialog);
+            var from = $('#systemCommandEditorDialogForm', dialog);
 
-            primarybtn.unbind('click').bind('click', function (e) {
+            from.on('submit', function (e) {
+                var name = $('#systemCommandEditorDialog_Name');
+                var action = $('#systemCommandEditorDialog_Action');
+
+                var error = false;
+
+                if (!name.val()) {
+                    name.closest('.control-group').removeClass('success').addClass('error');
+
+                    error = true;
+                }
+                if (!action.val()) {
+                    action.closest('.control-group').removeClass('success').addClass('error');
+
+                    error = true;
+                }
+
+                if (error) {
+                    e.preventDefault();
+                    return;
+                }
+
+                dialog.modal('hide');
                 var obj = ko.mapping.toJS(self.element);
 
                 if (!self.useConfirm())
@@ -42,7 +65,7 @@ $(function () {
                 backdrop: 'static',
                 keyboard: false
             });
-        }
+        };
     }
 
     // view model class, parameters for constructor, container to bind to
