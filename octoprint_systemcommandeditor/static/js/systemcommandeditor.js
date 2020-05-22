@@ -1,100 +1,113 @@
 ﻿$(function() {
-    function SystemCommandEditorViewModel(parameters) {
-        var self = this;
+    function SystemCommandEditorViewModel() {
+        let self = this;
 
-        self.settingsViewModel = parameters[0];
-        self.systemCommandEditorDialogViewModel = parameters[1];
-
-        self.actionsFromServer = [];
+        self.originalData = [];
         self.systemActions = ko.observableArray([]);
 
+        self.dividerID = 0;
         self.popup = undefined;
 
-        self.dividerID = 0;
+        self.history = new UndoRedoHistory();
 
-        self.onSettingsShown = function () {
-            self.requestData();
+        self.hasUndo = ko.observable(false);
+        self.hasRedo = ko.observable(false);
+
+        // Editor variables
+        self.editorTitle = ko.observable(gettext("Create Command"));
+        self.editorName = ko.observable("");
+        self.editorAction = ko.observable("");
+        self.editorCommand = ko.observable("");
+        self.editorUseConfirm = ko.observable(false);
+        self.editorConfirm = ko.observable("");
+        self.editorErrorMessageName = ko.observable("");
+        self.editorErrorMessageAction = ko.observable("");
+
+        self.undo = function() {
+            self.history.undo();
+        };
+        self.redo = function() {
+            self.history.redo();
         };
 
         self.requestData = function () {
-            $.ajax({
-                url: API_BASEURL + "settings",
-                type: "GET",
-                dataType: "json",
-                success: function(response) {
-                    self.fromResponse(response);
-                }
+            OctoPrint.system.getCommandsForSource("custom").done(function(response) {
+                self.originalData = response || [];
+                self.processData();
             });
         };
 
-        self.fromResponse = function (response) {
-            self.actionsFromServer = response.system.actions || [];
-            self.rerenderActions();
-
-            $("#systemActions").sortable({
-                items: '> li:not(.static)',
-                cursor: 'move',
-                update: function(event, ui) {
-                    var data = ko.dataFor(ui.item[0]);
-                    var item = _.find(self.actionsFromServer, function(e) {
-                        return e.action == data.action();
-                    });
-
-                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]) - 1;
-                    if (position >= 0) {
-                        self.actionsFromServer = _.without(self.actionsFromServer, item);
-                        self.actionsFromServer.splice(position, 0, item);
-                    }
-                    ui.item.remove();
-                    self.rerenderActions();
-                },
-                start: function(){
-                    $('.static', this).each(function(){
-                        var $this = $(this);
-                        $this.data('pos', $this.index());
-                    });
-                },
-                change: function(){
-                    $sortable = $(this);
-                    $statics = $('.static', this).detach();
-                    $helper = $('<li></li>').prependTo(this);
-                    $statics.each(function(){
-                        var $this = $(this);
-                        var target = $this.data('pos');
-
-                        $this.insertAfter($('li', $sortable).eq(target));
-                    });
-                    $helper.remove();
-                }
-            });
-        };
-
-        self.rerenderActions = function() {
+        self.processData = function() {
             self.dividerID = 0;
 
-            var array = []
-            _.each(self.actionsFromServer, function(e) {
-                var element = {};
+            const array = [];
+            _.each(self.originalData, function(e) {
+                let element = {};
 
                 if (!e.action.startsWith("divider")) {
                     element = _.extend(element, {
-                        name: ko.observable(e.name),
-                        action: ko.observable(e.action),
-                        command: ko.observable(e.command)
+                        name: e.name,
+                        action: e.action,
+                        command: e.command
                     });
 
                     if (e.hasOwnProperty("confirm"))
-                        element.confirm = ko.observable(e.confirm);
+                        element.confirm = e.confirm;
                 }
                 else
                 {
                     e.action = "divider" + (++self.dividerID);
-                    element.action = ko.observable(e.action);
+                    element.action = e.action;
                 }
                 array.push(element);
-            })
+            });
+
             self.systemActions(array);
-        }
+
+            self.history.values().forEach(function(e) {
+                self.processAction(e);
+            });
+        };
+
+        self.processAction = function(entry) {
+            self.hasUndo(self.history.hasUndo());
+            self.hasRedo(self.history.hasRedo());
+
+            if (entry.action === 'add') {
+                self.systemActions.splice(entry.data.index, 0, entry.data.element);
+            }
+            else if (entry.action === 'remove') {
+                self.systemActions.splice(entry.data.index, 1);
+            }
+            else if (entry.action === 'edit') {
+                let newData = entry.data;
+                const element = self.systemActions()[newData.index];
+
+                if (newData.hasOwnProperty("name"))
+                    element.name = newData.name;
+
+                if (newData.hasOwnProperty("action"))
+                    element.action = newData.action;
+
+                if (newData.hasOwnProperty("command"))
+                    element.command = newData.command;
+
+                if (newData.hasOwnProperty("confirm"))
+                {
+                    if (newData.confirm === undefined)
+                        delete element.confirm;
+                    else
+                        element.confirm = newData.confirm;
+                }
+            }
+            else if (entry.action === 'move') {
+                const elementIndex = entry.data.oldIndex;
+                const element = self.systemActions()[elementIndex];
+
+                self.systemActions.splice(elementIndex, 1);
+                self.systemActions.splice(entry.data.newIndex, 0, element);
+            }
+        };
 
         self._showPopup = function (options, eventListeners) {
             if (self.popup !== undefined) {
@@ -103,118 +116,221 @@
             self.popup = new PNotify(options);
 
             if (eventListeners) {
-                var popupObj = self.popup.get();
+                const popupObj = self.popup.get();
                 _.each(eventListeners, function (value, key) {
                     popupObj.on(key, value);
                 })
             }
         };
 
-        self.createElement = function (invokedOn, contextParent, selectedMenu) {
-            self.systemCommandEditorDialogViewModel.reset();
-            self.systemCommandEditorDialogViewModel.title(gettext("Create Command"));
-
-            self.systemCommandEditorDialogViewModel.show(function (ret) {
-                self.actionsFromServer.push(ret);
-                self.rerenderActions();
-            });
+        let _actionIndex = function(actionName) {
+            return self.systemActions().findIndex(e => e.action === actionName);
         }
-        self.deleteElement = function (invokedOn, contextParent, selectedMenu) {
-            var elementID = contextParent.attr('id');
-            var element = _.find(self.actionsFromServer, function(e) {
-                return e.action == elementID;
+
+        self.createElement = function (index) {
+            const actionIndex = _.isFunction(index) ? index()+1 : 0;
+            self.resetEditorDialog();
+            self.editorTitle(gettext("Create Command"));
+
+            self.showEditorDialog(function (ret) {
+                self.history.push(new HistoryNode('add', { index: actionIndex, element: ret }));
             });
-            if (element == undefined) {
+        };
+        self.createDivider = function(index) {
+            const actionIndex = _.isFunction(index) ? index()+1 : 0;
+            self.history.push(new HistoryNode('add', { index: actionIndex, element: { action: "divider" }}));
+        };
+        self.deleteElement = function (index) {
+            const actionIndex = index();
+            if (actionIndex === -1) {
                 self._showPopup({
                     title: gettext("Something went wrong while creating the new Element"),
                     type: "error"
                 });
                 return;
             }
-
-            showConfirmationDialog("", function (e) {
-                self.actionsFromServer = _.without(self.actionsFromServer, element);
-                self.rerenderActions();
-            });
-        }
-        self.editElement = function (invokedOn, contextParent, selectedMenu) {
-            var elementID = contextParent.attr('id');
-            var element = self.element = _.find(self.actionsFromServer, function(e) {
-                return e.action == elementID;
-            });
-            if (element == undefined) {
+            self.history.push(new HistoryNode('remove', { index: actionIndex }));
+        };
+        self.editElement = function (index) {
+            const actionIndex = index();
+            if (actionIndex === -1) {
                 self._showPopup({
-                    title: gettext("Something went wrong while creating the new Element"),
+                    title: gettext("Something went wrong while editing the element"),
                     type: "error"
                 });
                 return;
             }
 
-            var data = ko.mapping.toJS(element);
+            const element = self.systemActions()[actionIndex];
+            self.resetEditorDialog(element);
+            self.editorTitle(gettext("Edit Command"));
 
-            self.systemCommandEditorDialogViewModel.reset(data);
-            self.systemCommandEditorDialogViewModel.title(gettext("Edit Command"));
+            self.showEditorDialog(function (ret) {
+                const newData = { index: actionIndex };
 
-            self.systemCommandEditorDialogViewModel.show(function (ret) {
-                var element = self.element;
+                if (element.name !== ret.name)
+                    newData.name = ret.name;
 
-                element.name = ret.name;
-                element.action = ret.action;
-                element.command = ret.command;
+                if (element.action !== ret.action)
+                    newData.action = ret.action;
+
+                if (element.command !== ret.command)
+                    newData.command = ret.command;
 
                 if (ret.hasOwnProperty("confirm"))
-                    element.confirm = ret.confirm;
-                else
+                    newData.confirm = ret.confirm;
+                else if (element.hasOwnProperty("confirm"))
+                    newData.confirm = undefined;
+
+                self.history.push(new HistoryNode('edit', newData));
+            });
+        };
+
+        self.resetEditorDialog = function (data) {
+            self.editorName("");
+            self.editorAction("");
+            self.editorCommand("");
+            self.editorConfirm("");
+
+            self.editorErrorMessageName("");
+            self.editorErrorMessageAction("");
+
+            if (data !== undefined) {
+                if (data.name !== undefined)
+                    self.editorName(data.name);
+                if (data.action !== undefined)
+                    self.editorAction(data.action);
+                if (data.command !== undefined)
+                    self.editorCommand(data.command);
+
+                self.editorUseConfirm(data.hasOwnProperty("confirm"));
+                if (data.confirm !== undefined)
+                    self.editorConfirm(data.confirm);
+            }
+        };
+        self.showEditorDialog = function (callback) {
+            const dialog = $("#systemCommandEditorDialog");
+            const from = $('#systemCommandEditorDialogForm', dialog);
+
+            from.off('submit').on('submit', function (e) {
+                const name = $('#systemCommandEditorDialog_Name');
+                const action = $('#systemCommandEditorDialog_Action');
+
+                self.editorErrorMessageName("");
+                self.editorErrorMessageAction("");
+                name.closest('.control-group').removeClass('error');
+                action.closest('.control-group').removeClass('error');
+
+                let error = false;
+                if (self.editorName() === "") {
+                    self.editorErrorMessageName(gettext("Name is mandatory!"));
+                    name.closest('.control-group').addClass('error');
+
+                    error = true;
+                }
+                if (self.editorAction() === "") {
+                    self.editorErrorMessageAction(gettext("Action is mandatory!"));
+                    action.closest('.control-group').addClass('error');
+
+                    error = true;
+                }
+                if (_actionIndex(self.editorAction()) !== -1)
+                {
+                    self.editorErrorMessageAction(gettext("Action name must be unique!"));
+                    action.closest('.control-group').addClass('error');
+
+                    error = true;
+                }
+
+                if (error) {
+                    e.preventDefault();
+                    return;
+                }
+
+                dialog.modal('hide');
+
+                let element = {
+                    name: self.editorName(),
+                    action: self.editorAction(),
+                    command: self.editorCommand(),
+                    confirm: self.editorConfirm()
+                };
+
+                if (!self.editorUseConfirm())
                     delete element.confirm;
 
-                self.rerenderActions();
+                callback(element);
             });
-        }
 
-        self.systemContextMenu = function (invokedOn, contextParent, selectedMenu) {
-            switch (selectedMenu.attr('cmd')) {
-                case "editCommand": {
-                    self.editElement(invokedOn, contextParent, selectedMenu);
-                    break;
-                }
-                case "deleteCommand": {
-                    self.deleteElement(invokedOn, contextParent, selectedMenu);
-                    break;
-                }
-                case "createCommand": {
-                    self.createElement(invokedOn, contextParent, selectedMenu);
-                    break;
-                }
-                case "createDivider": {
-                    self.actionsFromServer.push({ action: "divider" });
-                    self.rerenderActions();
-                    break;
-                }
-            }
-        }
+            dialog.modal({
+                show: 'true',
+                backdrop: 'static',
+                keyboard: false
+            });
+        };
 
         self.onBeforeBinding = function () {
-            self.settings = self.settingsViewModel.settings;
-        }
+            self.history.off("add").on("add", self.processAction);
+            self.history.off("undo").on("undo", self.processData);
+            self.history.off("redo").on("redo", self.processData);
 
-        self.onSettingsBeforeSave = function () {
-            _.each(self.actionsFromServer, function(e) {
-                if (e.action.startsWith("divider")) {
-                    e.action = "divider";
+            $("#systemActions>table").sortable({
+                items: '> tbody > tr:not(.static)',
+                cursor: 'move',
+                update: function(event, ui) {
+                    const data = ko.dataFor(ui.item[0]);
+                    const oldIndex = self.systemActions().findIndex(e => e.action === data.action);
+
+                    const newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]) - 1;
+                    if (newIndex >= 0) {
+                        self.history.push(new HistoryNode('move', { oldIndex: oldIndex, newIndex: newIndex }));
+                    }
+                    ui.item.remove();
+                },
+                start: function(){
+                    $('.static', this).each(function(){
+                        const $this = $(this);
+                        $this.data('pos', $this.index());
+                    });
+                },
+                change: function(){
+                    $sortable = $(this);
+                    $statics = $('.static', this).detach();
+                    $helper = $('<tr></tr>').prependTo(this);
+                    $statics.each(function(){
+                        const $this = $(this);
+                        const target = $this.data('pos');
+
+                        $this.insertAfter($('tr', $sortable).eq(target));
+                    });
+                    $helper.remove();
                 }
             });
-            self.settingsViewModel.system_actions(self.actionsFromServer);
-        }
+        };
 
-        self.onEventSettingsUpdated = function (payload) {
+        self.onSettingsShown = function () {
             self.requestData();
-        }
+        };
+
+        self.onSettingsHidden = function () {
+            self.history.clear();
+            self.hasUndo(false);
+            self.hasRedo(false);
+        };
+
+        self.onSettingsBeforeSave = function () {
+            OctoPrint.plugins.systemcommandeditor.update(self.history.values());
+        };
+
+        self.onEventSettingsUpdated = function () {
+            self.requestData();
+        };
     }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         SystemCommandEditorViewModel,
-        ["settingsViewModel", "systemCommandEditorDialogViewModel"],
-        ["#settings_plugin_systemcommandeditor"]
+        [],
+        ["#settings_plugin_systemcommandeditor", "#systemCommandEditorDialog"]
     ]);
 });

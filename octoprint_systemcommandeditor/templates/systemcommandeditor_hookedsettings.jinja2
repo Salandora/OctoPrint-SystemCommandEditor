@@ -1,19 +1,54 @@
 <h4>System Command Editor</h4>
 
-<p><small>Right-mouse click the section below for available options.</small></p>
-<div class="dropdown open">
-    <ul class="dropdown-menu" id="systemActions" title="Right-mouse click for actions">
-        <li class="static" style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#SystemCommandEditor_systemContextMenu1', menuSelected: $root.systemContextMenu }"></li>
-        <!-- ko foreach: systemActions -->
-            <!-- ko ifnot: action().startsWith("divider") -->
-            <li data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#SystemCommandEditor_commandContextMenu', menuSelected: $root.systemContextMenu }"><a href="#" data-bind="text: name"></a></li>
-            <!-- /ko -->
-            <!-- ko if: action().startsWith("divider") -->
-            <li style="height: 10px; overflow: hidden; background-color: #e5e5e5; border: 1px solid #fff" data-bind="attr: { 'id': action }, contextMenu: { menuSelector: '#SystemCommandEditor_dividerContextMenu', menuSelected: $root.systemContextMenu }"></li>
-            <!-- /ko -->
-        <!-- /ko -->
-    </ul>
+<div class="btn-group">
+    <button class="btn" title="Undo" data-bind="enable: hasUndo, click: undo"><i class="fa fa-arrow-left"></i></button>
+    <button class="btn" title="Redo" data-bind="enable: hasRedo, click: redo"><i class="fa fa-arrow-right"></i></button>
 </div>
+
+<div>
+    <p><small>Right-mouse click the section below for available options.</small></p>
+    <div class="dropdown open" id="systemActions">
+        <table class="dropdown-menu">
+            <tbody>
+                <tr class="static">
+                    <td class="systemcommandeditor_actions">
+                        <a href="#" class="fa fa-plus" title="{{ _('Create Command') }}" data-bind="click: function() { $root.createElement(0); }"> C</a>&nbsp;|&nbsp;
+                        <a href="#" class="fa fa-plus" title="{{ _('Create Divider') }}" data-bind="click: function() { $root.createDivider(0); }"> D</a>
+                    </td>
+                    <td></td>
+                </tr>
+            <!-- ko foreach: systemActions -->
+                <!-- ko if: action.startsWith("divider") -->
+                <tr>
+                    <td>
+                        <div class="divider"></div>
+                        <div data-bind="template: 'systemcommandeditor_actions'"></div>
+                    </td>
+                    <td><a href="#" class="fa fa-trash-o" title="Delete" data-bind="click: function() { $root.deleteElement($index); }"></a></td>
+                </tr>
+                <!-- /ko -->
+                <!-- ko ifnot: action.startsWith("divider") -->
+                <tr>
+                    <td class="systemcommandeditor_name">
+                        <div data-bind="text: name"></div>
+                        <div data-bind="template: 'systemcommandeditor_actions'"></div>
+                    </td>
+                    <td class="systemcommandeditor_actions">
+                        <a href="#" class="fa fa-pencil" title="{{ _('Edit') }}" data-bind="click: function() { $root.editElement($index); }"></a>&nbsp;|&nbsp;
+                        <a href="#" class="fa fa-trash-o" title="{{ _('Delete') }}" data-bind="click: function() { $root.deleteElement($index); }"></a>
+                    </td>
+                </tr>
+                <!-- /ko -->
+            <!-- /ko -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="text/html" id="systemcommandeditor_actions">
+    <a href="#" class="fa fa-plus" title="{{ _('Create Command') }}" data-bind="click: function() { $root.createElement($index); }"> C</a>&nbsp;|&nbsp;
+    <a href="#" class="fa fa-plus" title="{{ _('Create Divider') }}" data-bind="click: function() { $root.createDivider($index); }"> D</a>
+</script>
 
 <ul id="SystemCommandEditor_systemContextMenu1" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
 	<li><a href="#" cmd="createCommand">{{ _('Create Command') }}</a></li>

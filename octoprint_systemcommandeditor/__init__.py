@@ -5,14 +5,16 @@ __author__ = "Marc Hannappel <salandora@gmail.com>"
 __license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agpl.html'
 
 import octoprint.plugin
+from octoprint.server import NO_CONTENT
+from octoprint.server.util.flask import no_firstrun_access
+from octoprint.access.permissions import Permissions
 
-class SystemCommandEditorPlugin(octoprint.plugin.SettingsPlugin,
-								octoprint.plugin.TemplatePlugin,
+import flask
+
+class SystemCommandEditorPlugin(octoprint.plugin.TemplatePlugin,
 								octoprint.plugin.BlueprintPlugin,
+                                octoprint.plugin.SettingsPlugin,
 								octoprint.plugin.AssetPlugin):
-	def get_settings_defaults(self):
-		return dict(actions=[])
-
 	def get_template_configs(self):
 		if "editorcollection" in self._plugin_manager.enabled_plugins:
 			return [
@@ -23,16 +25,71 @@ class SystemCommandEditorPlugin(octoprint.plugin.SettingsPlugin,
 				dict(type="settings", template="systemcommandeditor_hookedsettings.jinja2", custom_bindings=True)
 			]
 
-	def on_settings_save(self, data):
-		pass
-
 	def get_assets(self):
 		return dict(
 			js=["js/jquery.ui.sortable.js",
 				"js/systemcommandeditor.js",
-				"js/systemcommandeditorDialog.js"],
+			    "js/history.js"],
+			clientjs=["clientjs/systemcommandeditor.js"],
 			css=["css/systemcommandeditor.css"]
 		)
+
+	@octoprint.plugin.BlueprintPlugin.route("/updateSystemCommands", methods=["POST"])
+	@no_firstrun_access
+	@Permissions.SETTINGS.require(403)
+	def update_systemcommands(self):
+		data = flask.request.json
+		updates = data.get("updates", [])
+
+		commands = self._settings.global_get(["system", "actions"])
+		for action in updates:
+			success, response = self._process_action(commands, action)
+			# In case something is wrong return a message and end to prevent corrupting data
+			if not success:
+				return response
+
+		self._settings.global_set(["system", "actions"], commands)
+
+		return NO_CONTENT
+
+	def _process_action(self, list, action):
+		if action['action'] == "add":
+			list.insert(action['data']['index'], action['data']['element'])
+		elif action['action'] == "remove":
+			list.pop(action['data']['index'])
+		elif action['action'] == "edit":
+			newData = action['data']
+			element = list[newData['index']]
+
+			def _update(key):
+				if key in newData:
+					element[key] = newData[key]
+
+			def _unique(key):
+				value = newData[key]
+				return not any(value == obj[key] for obj in list)
+
+			if not _unique('action'):
+				return False, flask.make_response(("'action' must be unique!", 400))
+
+			_update("action")
+
+			_update("name")
+			_update("command")
+
+			if "confirm" in newData:
+				if newData["confirm"] is None:
+					del element["confirm"]
+				else:
+					element["confirm"] = newData["confirm"]
+		elif action['action'] == "move":
+			oldIndex = action['data']['oldIndex']
+			element = list[oldIndex]
+
+			del list[oldIndex]
+			list.insert(action['data']['newIndex'], element)
+
+		return True, NO_CONTENT
 
 	def get_update_information(self):
 		return dict(

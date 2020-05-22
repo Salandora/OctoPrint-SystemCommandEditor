@@ -1,36 +1,42 @@
 <div id="systemCommandEditorDialog" class="modal hide">
-    <form id="systemCommandEditorDialogForm" class="form-horizontal" data-bind="with: element">
+    <form id="systemCommandEditorDialogForm" class="form-horizontal">
         <div class="modal-header">
             <h3 data-bind="text: $root.title"></h3>
         </div>
         <div class="modal-body">
+            <div class="control-group error error-message-container" data-bind="visible: editorErrorMessageName() !== ''">
+                <h6 class="control-label error-message" data-bind="text: editorErrorMessageName"></h6>
+            </div>
             <div class="control-group">
                 <label class="control-label" for=name">{{ _('Name') }}</label>
                 <div class="controls">
-                    <input type="text" id="systemCommandEditorDialog_Name" class="required" style="width: 97%" data-bind="value: name" placeholder="Example: Shutdown"></input>
+                    <input type="text" id="systemCommandEditorDialog_Name" class="required" style="width: 97%" data-bind="value: editorName" placeholder="Example: Shutdown"/>
                 </div>
+            </div>
+            <div class="control-group error error-message-container" data-bind="visible: editorErrorMessageAction() !== ''">
+                <h6 class="control-label error-message" data-bind="text: editorErrorMessageAction"></h6>
             </div>
             <div class="control-group">
                 <label class="control-label" for="action">{{ _('Action') }}</label>
                 <div class="controls">
-                    <input type="text" id="systemCommandEditorDialog_Action" class="required" style="width: 97%" data-bind="value: action" placeholder="Example: shutdown"></input>
+                    <input type="text" id="systemCommandEditorDialog_Action" class="required" style="width: 97%" data-bind="value: editorAction" placeholder="Example: shutdown"/>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label" for="command">{{ _('Command') }}</label>
                 <div class="controls">
-                    <input type="text" id="systemCommandEditorDialog_Command" style="width: 97%" data-bind="value: command" placeholder="Example: sudo shutdown -h now"></input>
+                    <input type="text" id="systemCommandEditorDialog_Command" style="width: 97%" data-bind="value: editorCommand" placeholder="Example: sudo shutdown -h now"/>
                 </div>
             </div>
 
             <div class="control-group">
-                <label class="control-label"><input type="checkbox" data-bind="checked: $root.useConfirm"></input>&nbsp;{{ _('Use Confirmation') }}</label>
+                <label class="control-label"><input type="checkbox" data-bind="checked: $root.editorUseConfirm" /> {{ _('Use Confirmation') }}</label>
             </div>
-            <!-- ko if: $root.useConfirm() -->
+            <!-- ko if: $root.editorUseConfirm() -->
             <div class="control-group">
                 <label class="control-label">{{ _('Message') }}</label>
                 <div class="controls">
-                    <input style="width: 97%" data-bind="value: confirm" placeholder="Example: You are about to take the following action."></input>
+                    <input style="width: 97%" data-bind="value: editorConfirm" placeholder="Example: You are about to take the following action." />
                 </div>
             </div>
             <!-- /ko -->
