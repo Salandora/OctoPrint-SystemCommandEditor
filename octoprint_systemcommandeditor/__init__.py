@@ -31,7 +31,8 @@ class SystemCommandEditorPlugin(octoprint.plugin.TemplatePlugin,
 				"js/systemcommandeditor.js",
 			    "js/history.js"],
 			clientjs=["clientjs/systemcommandeditor.js"],
-			css=["css/systemcommandeditor.css"]
+			css=["css/systemcommandeditor.css"],
+			less=["less/systemcommandeditor.less"]
 		)
 
 	@octoprint.plugin.BlueprintPlugin.route("/updateSystemCommands", methods=["POST"])

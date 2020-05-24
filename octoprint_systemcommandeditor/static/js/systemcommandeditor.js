@@ -274,7 +274,7 @@
             self.history.off("undo").on("undo", self.processData);
             self.history.off("redo").on("redo", self.processData);
 
-            $("#systemActions>table").sortable({
+            $(".systemActions>table").sortable({
                 items: '> tbody > tr:not(.static)',
                 cursor: 'move',
                 update: function(event, ui) {
